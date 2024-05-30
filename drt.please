@@ -53,6 +53,38 @@ $ vim /etc/chrony.conf
 $ chronyc sources
 $ timedatectl set-timezone Europe/Moscow
 
+FreeIPa
+#server HQ-SRV
+$ apt-get install freeipa-server freeipa-server-dns
+$ ipa-server-install
+  DNS: yes
+  manager password: P@ssw0rd
+  DNS forwarders: no
+  CHRONY: no
+  Continue to configure...: yes
+$ kinit admin
+$ klist
+http://<hostname domain>
+  admin p@ssw0rd
+#client
+$ apt-get install freeipa-client
+$ ping hq-srv.hq.work #nameserver HQ-SRV
+$ ipa-client-install --mkhomedir --domain hq.work --realm HQ.WORK --enable-dns-updates
+  Continue to configure...: yes
+  P@ssw0rd
+
+Rsyslog
+#server
+$ apt-get install rsyslog-classic
+$ vim /etc/rsyslog.d/00_common.conf
+  #tcp/udp uncomment
+  $template RemoteLogs,"/var/log/rsyslog/%HOSTNAME%/%PROGRAMNAME%.log"
+  *.* ?RemoteLogs
+  & ~
+#client
+$ apt-get install rsyslog-classic
+$ echo "*.* @@192.168.200.1:514" > /etc/rsyslog.d/all_log.conf
+$ logger -p 'error' 'Test'
 
 History
 ~/.bash_history
