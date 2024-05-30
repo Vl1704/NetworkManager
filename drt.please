@@ -1,0 +1,58 @@
+iperf3
+Both hosts must have iperf3
+iperf -c <address>
+
+Iproute2
+$ ip a add 11.11.11.11/24 dev ens18
+$ ip route add 192.168.100.62 dev ens38
+$ ip route add default via 192.168.100.62
+$ ip -br a show
+$ ip tunnel add gre1 mode gre local 10.10.10.1 remote 20.20.20.100 ttl 255
+$ ip addr add 10.5.5.1/30 dev gre1 #не забываем поднять его
+$ ip tunnel show
+$ ip link set down dev ens18 #или $ ip link set up dev ens18
+$ ip link set up dev ens18 
+$ ip link add name eth0.110 link eth0 type vlan id 110
+
+NetworkManager
+$ apt install network-manager #debian; NetworkManager - AltLinux
+$ nmcli con del Wired\ connection\ 2
+$ nmcli con add type ethernet con-name isp ifname ens18 ipv4.method manual ipv4.addresses 22.22.22.22/24 ipv4.gateway 22.22.22.1 ipv4.routes "11.11.11.0/24 22.22.22.1" ipv4.dns 8.8.8.8 ipv4.dns-search auto
+$ nmcli con up isp
+$ nmcli con mod autoconnect yes
+$ nmcli con add type ethernet con-name rtrr ifname ens20 ipv4.method auto
+$ nmcli con reload
+$ nmcli con add type ip-tunnel ip-tunnel.mode gre ip-tunnel.ttl 10 con-name gre1 ifname gre1 remote 5.5.5.100 local 4.4.4.100 ipv4.method manual ipv4.addresses 10.10.10.1/30
+$ nmcli con add type ip-tunnel ip-tunnel.mode gre tp-tunnel.ttl 10 con-name gre1 ifname gre1 remote 4.4.4.100 local 5.5.5.100 ipv4.method manual ipv4.addresses 10.10.10.2/30
+
+FRR
+$ apt-get install frr
+$ vtysh
+  router ospf
+  network <network> area 0
+
+SSH
+$ vim /etc/openssh/sshd_config
+  Port 2222
+  PermitRootLogin no
+  Match Address <address>
+    DenyUsers *
+
+#HQ-R to ISP
+$ iptables -t nat -A PREROUTING -i ens33 -p tcp --dport 22 -j DNAT --to-destination 192.168.100.10:2222
+#Routers
+$ iptables -t nat -A POSTROUTING -o <internet interface> -j MASQUERADE
+
+Chrony
+$ vim /etc/chrony.conf
+  server 127.0.0.1 iburst prefer #server <server address> iburst prefer - on client
+  hwtimestamp *
+  local stratum 5
+  allow 0/0
+  #allow ::/0
+$ chronyc sources
+$ timedatectl set-timezone Europe/Moscow
+
+
+History
+~/.bash_history
