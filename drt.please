@@ -8,9 +8,9 @@ $ ip route add 192.168.100.62 dev ens38
 $ ip route add default via 192.168.100.62
 $ ip -br a show
 $ ip tunnel add gre1 mode gre local 10.10.10.1 remote 20.20.20.100 ttl 255
-$ ip addr add 10.5.5.1/30 dev gre1 #не забываем поднять его
+$ ip addr add 10.5.5.1/30 dev gre1 #$ ip link set up gre1
 $ ip tunnel show
-$ ip link set down dev ens18 #или $ ip link set up dev ens18
+$ ip link set down dev ens18 #or $ ip link set up dev ens18
 $ ip link set up dev ens18 
 $ ip link add name eth0.110 link eth0 type vlan id 110
 
