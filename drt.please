@@ -64,7 +64,7 @@ $ ipa-server-install
   Continue to configure...: yes
 $ kinit admin
 $ klist
-http://<hostname domain>
+http://<hostname>.<domain>
   admin p@ssw0rd
 #client
 $ apt-get install freeipa-client
@@ -85,6 +85,86 @@ $ vim /etc/rsyslog.d/00_common.conf
 $ apt-get install rsyslog-classic
 $ echo "*.* @@192.168.200.1:514" > /etc/rsyslog.d/all_log.conf
 $ logger -p 'error' 'Test'
+
+MediaWiki
+#HQ-SRV
+$ apt-get update && apt-get install docker-{ce,compose}
+$ usermod root -aG docker
+$ vim wiki.yml
+  version: '3'
+  services:
+    mediawiki:
+      image: mediawiki
+      restart: always
+      ports:
+        - 8080:80
+      links:
+        - database
+      container_name: wiki
+      volumes:
+        - images:/var/www/html/images
+ #       - ./LocalSettings.php:/var/www/html/LocalSettings.php  remove the comment later
+    database:
+      image: mariadb
+      container_name: mariadb
+      restart: always
+      environment:
+        MYSQL_DATABASE: mediawiki
+        MYSQL_USER: wiki
+        MYSQL_PASSWORD: DEP@ssw0rd
+        MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
+        TZ: Asia/Yekaterinburg
+      volumes:
+        - db:/var/lib/mysql
+  volumes:
+    images:
+    db:
+$ chmod +x wiki.yml
+$ systemctl enable --now docker
+$ docker volume create storage
+  storage
+$ docker-compose -f wiki.yml up -d
+  ERROR Get:
+$ vim /etc/docker/daemon.json
+  { #delete or comment with "//" all before
+    "registry-mirrors": [ 
+      "https://dockerhub1.beget.com",
+      "https://mirror.gcr.io" 
+    ] 
+  }
+$ systemctl restart docker
+$ lsof -i :8080
+  ahttpd
+$ vim /etc/ahttpd/ahttpd.conf
+  server-port 8090
+$ kill -9 8080
+$ docker-compose -f wiki.yml up -d
+$ iptables -t nat -A PREROUTING -i <IF to HQ-R=ens18> -p tcp --dport 8080 -j DNAT --to-destination 192.168.100.1:8080
+
+#browser
+http://hq-srv.hq.work:8080
+set up the wiki - Language - Welcome...
+Database host: mariadb - DB name: mediawiki - DB username: wiki; DB password: DEP@ssw0rd
+Database settings - Continue
+Name of wiki: mariadb - Your username: admin - Password: DEP@ssw0rd
+I'm bored already, just install the wiki. - Continue*2 - Complete
+Download LocalSetting.php - enter your wiki
+
+#terminal
+$ cp -r /home/<current user=user1>/Downloads/LocalSettings.php /root/
+$ vim /root/wiki.yml
+  - ./LocalSettings.php:/var/www/html/LocalSettings.php  #remove now
+$ docker-compose -f wiki.yml stop
+$ docker-compose -f wiki.yml up -d
+  Recreating wiki ... done
+
+#CLI
+#terminal
+$ vim /etc/hosts
+  192.168.100.10 mediawiki.hq.work mediawiki
+  192.168.100.10 hq-srv.hq.work  mediawiki
+#browser
+mediawiki.hq.work:8080
 
 History
 ~/.bash_history
