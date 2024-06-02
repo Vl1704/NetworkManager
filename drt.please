@@ -43,6 +43,27 @@ $ iptables -t nat -A PREROUTING -i ens33 -p tcp --dport 22 -j DNAT --to-destinat
 #Routers
 $ iptables -t nat -A POSTROUTING -o <internet interface> -j MASQUERADE
 
+Moodle
+#server BR-SRV
+$ apt-get install deploy
+$ deploy moodle
+  Deploy complete successful.
+$ deploy moodle password=P@ssw0rd
+
+#client CLI
+#browser
+br-srv.branch.work/moodle
+Login to moodle - admin, P@ssw0rd
+  First name: admin - Last name: admin - Email: admin@hq.work
+Home - Settings - Full site name: Seat number 7 - Short name for site: moodle - Save changes
+Site administration - Users - Accounts - Cohorts
+  System cohorts - Add new cohort - Name: Admin - Save changes *3 #Manager, WS, TEAM
+Site administration - Users - Accounts - Browse list of users - Add a new user (bellow the page)
+  Username: manager1 - New password: P@ssw0rd - First name: Manager1 - Last name: Manager1 - Email: manager1@hq.work - Create user (bellow the page) #user1, user2, user3...
+Site administration - Users - Accounts - Cohorts
+  Admin - (Gear - right from the name) - Assign 
+    Potential users, admin admin - Add #Back to coharts button after all
+
 Chrony
 $ vim /etc/chrony.conf
   server 127.0.0.1 iburst prefer #server <server address> iburst prefer - on client
