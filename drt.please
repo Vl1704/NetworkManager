@@ -53,6 +53,66 @@ $ vim /etc/chrony.conf
 $ chronyc sources
 $ timedatectl set-timezone Europe/Moscow
 
+Samba NFS
+#server HQ-SRV
+$ useradd admin -m -s /bin/bash #network_admin, branch_admin
+$ passwd admin #network_admin, branch_admin
+  P@ssw0rd
+$ apt-get install samba samba-client
+$ smbpasswd -a admin #network_admin, branch_admin
+  P@ssw0rd
+$ mkdir /opt/{branch,network,admin}
+$ chmod 777 /opt/{branch,network,admin}
+$ vim /etc/samba/smb.conf
+  [Branch_Files]
+    path = /opt/branch
+    writable = yes
+    read only = no
+    valid users = branch_admin
+  [Network]
+    path = /opt/network
+    writable = yes
+    read only = no
+    valid users = network_admin
+  [Admin_Files]
+    path = /opt/admin
+    writable = yes
+    read only = no
+    valid users = admin
+$ systemctl restart smb
+$ testparm -s
+  #[Branch_Files], [Network], [Admin_Files]
+$ smbclient -L localhost
+  Sharename
+  ---------
+  Branch_Files
+  Network
+  Admin_Files
+$ smbclient //localhost/admin_files -c "ls" -U admin #Branch_Files -U branch_admin
+
+#client HQ-R, BR-R
+$ apt-get install -y cifs-utils
+$ smbclient -L <samba server=192.168.100.10>
+  Sharename
+  ---------
+  Branch_Files
+  Network
+  Admin_Files
+$ smbclient //192.168.100.10/admin_files -c "ls" -U admin #Branch_Files -U branch_admin
+$ mkdir /mnt/samba_files
+$ vim /etc/fstab
+  //192.168.100.10/Admin_Files /mnt/samba_files cifs user,rw,credentials=/home/admin/.client 0 0 #network_admin,branch_admin
+$ vim /etc/admin/.client #network_admin,branch_admin
+  username = admin #for each samba user
+  password = P@ssw0rd
+
+#draft not for use
+#$ mkdir /mnt/samba_files
+#$ vim /home/admin/samba_mount.sh #network_admin, branch_admin
+#  mount -t cifs //192.168.100.10/public /mnt/samba_files -o username=admin,password=P@ssw0rd
+#$ chmod +x /home/admin/samba_mount.sh
+#$ vim /home/admin/
+
 FreeIPa
 #server HQ-SRV
 $ apt-get install freeipa-server freeipa-server-dns
@@ -85,6 +145,7 @@ $ vim /etc/rsyslog.d/00_common.conf
 $ apt-get install rsyslog-classic
 $ echo "*.* @@192.168.200.1:514" > /etc/rsyslog.d/all_log.conf
 $ logger -p 'error' 'Test'
+$ systemctl enable --now rsyslog
 
 MediaWiki
 #HQ-SRV
